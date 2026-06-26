@@ -1,0 +1,1751 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>三和老爷车博物馆线上展馆</title>
+  <style>
+    :root{
+      --bg:#121212;
+      --panel:#171717;
+      --panel-2:#1d1d1d;
+      --line:rgba(200,169,110,.18);
+      --gold:#c8a96e;
+      --red:#d40000;
+      --red-dark:#9f0000;
+      --text:#f3eee2;
+      --muted:rgba(243,238,226,.68);
+      --ease:cubic-bezier(0.22, 1, 0.36, 1);
+      --dur:.5s;
+      --topbar:60px;
+      --bottombar:76px;
+      --shadow:0 24px 80px rgba(0,0,0,.45);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      color:var(--text);
+      background:var(--bg);
+      font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+      overflow:hidden;
+      text-rendering:optimizeLegibility;
+      -webkit-font-smoothing:antialiased;
+    }
+    button{font:inherit}
+    img{display:block;max-width:100%}
+    .app{
+      position:relative;
+      width:100%;
+      height:100%;
+      overflow:hidden;
+      background:
+        radial-gradient(circle at 10% 0%, rgba(200,169,110,.08), transparent 28%),
+        radial-gradient(circle at 90% 8%, rgba(212,0,0,.08), transparent 22%),
+        linear-gradient(180deg, #111, #0f0f0f 42%, #121212);
+    }
+
+    .topbar{
+      position:fixed;
+      inset:0 0 auto 0;
+      height:var(--topbar);
+      z-index:40;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 14px;
+      background:rgba(18,18,18,.86);
+      backdrop-filter:blur(16px);
+      border-bottom:1px solid rgba(200,169,110,.14);
+    }
+    .topbar::after{
+      content:"";
+      position:absolute;
+      left:0; right:0; bottom:0;
+      height:1px;
+      background:linear-gradient(90deg, transparent, rgba(200,169,110,.35), transparent);
+      pointer-events:none;
+    }
+    .topbar-btn{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      min-width:88px;
+      height:38px;
+      padding:0 12px;
+      border:1px solid transparent;
+      border-radius:999px;
+      background:transparent;
+      color:var(--gold);
+      cursor:pointer;
+      transition:transform var(--dur) var(--ease), background var(--dur) var(--ease), border-color var(--dur) var(--ease), opacity var(--dur) var(--ease);
+    }
+    .topbar-btn:hover{background:rgba(200,169,110,.08);border-color:rgba(200,169,110,.12)}
+    .topbar-btn:active{transform:translateY(1px)}
+    .topbar-btn[aria-disabled="true"]{opacity:.35;pointer-events:none}
+    .logo-btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      border:0;
+      background:transparent;
+      color:var(--text);
+      letter-spacing:.36em;
+      text-transform:uppercase;
+      cursor:pointer;
+      padding:0;
+      font-weight:700;
+      transition:opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+    }
+    .logo-btn:hover{opacity:.82}
+    .logo-mark{
+      width:12px;height:12px;border-radius:50%;
+      background:linear-gradient(180deg, var(--gold), #8f6d2c);
+      box-shadow:0 0 0 4px rgba(200,169,110,.12);
+      flex:none;
+    }
+    .logo-text{font-size:14px;white-space:nowrap}
+
+    .main{
+      position:fixed;
+      left:0; right:0;
+      top:var(--topbar);
+      bottom:var(--bottombar);
+      overflow:hidden;
+    }
+    .page{
+      position:absolute;
+      inset:0;
+      opacity:0;
+      visibility:hidden;
+      pointer-events:none;
+      transform:translate3d(28px,0,0);
+      transition:opacity var(--dur) var(--ease), transform var(--dur) var(--ease), visibility 0s linear var(--dur);
+    }
+    .page.active{
+      opacity:1;
+      visibility:visible;
+      pointer-events:auto;
+      transform:translate3d(0,0,0);
+      transition:opacity var(--dur) var(--ease), transform var(--dur) var(--ease), visibility 0s;
+    }
+    .page.leaving-forward{opacity:0;transform:translate3d(-28px,0,0);visibility:visible}
+    .page.leaving-back{opacity:0;transform:translate3d(28px,0,0);visibility:visible}
+    .page.enter-from-right{opacity:0;transform:translate3d(28px,0,0)}
+    .page.enter-from-left{opacity:0;transform:translate3d(-28px,0,0)}
+    .page-scroll{
+      width:100%;
+      height:100%;
+      overflow:auto;
+      overscroll-behavior:contain;
+      -webkit-overflow-scrolling:touch;
+      scroll-behavior:smooth;
+    }
+    .page-shell{
+      min-height:100%;
+      position:relative;
+      padding:28px 16px 40px;
+    }
+
+    .section{
+      position:relative;
+      max-width:1240px;
+      margin:0 auto 18px;
+      border:1px solid rgba(200,169,110,.08);
+      background:linear-gradient(180deg, rgba(23,23,23,.82), rgba(18,18,18,.88));
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .section::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius:inherit;
+      pointer-events:none;
+      background:
+        linear-gradient(90deg, rgba(200,169,110,.06), transparent 14%, transparent 86%, rgba(212,0,0,.06)),
+        linear-gradient(180deg, rgba(255,255,255,.02), transparent 26%);
+    }
+    .section-head{
+      position:relative;
+      z-index:1;
+      padding:18px 18px 0;
+    }
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      color:var(--gold);
+      font-size:12px;
+      letter-spacing:.28em;
+      text-transform:uppercase;
+    }
+    .eyebrow::before{
+      content:"";
+      width:28px;
+      height:1px;
+      background:var(--gold);
+      opacity:.8;
+    }
+    .section-title{
+      margin:10px 0 0;
+      font-size:22px;
+      line-height:1.2;
+      letter-spacing:.04em;
+    }
+    .section-copy{
+      margin:10px 0 0;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.8;
+      max-width:62ch;
+    }
+    .hero{
+      min-height:calc(100vh - var(--topbar) - var(--bottombar) - 20px);
+      display:flex;
+      align-items:flex-end;
+      border:0;
+        background:
+        linear-gradient(180deg, rgba(8,8,8,.22), rgba(8,8,8,.78) 68%, rgba(8,8,8,.9)),
+        url("https://commons.wikimedia.org/wiki/Special:FilePath/Interior_of_the_Museo_Enzo_Ferrari%2C_Modena%2C_2019%2C_17.jpg") center/cover no-repeat;
+    }
+    .hero-inner{
+      position:relative;
+      z-index:1;
+      width:min(1240px, 100%);
+      margin:0 auto;
+      padding:32px 18px 30px;
+    }
+    .hero-kicker{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      color:var(--gold);
+      letter-spacing:.34em;
+      font-size:12px;
+      text-transform:uppercase;
+    }
+    .hero-kicker::after{
+      content:"";
+      width:54px;
+      height:1px;
+      background:linear-gradient(90deg, var(--gold), transparent);
+    }
+    .hero-title{
+      margin:14px 0 0;
+      max-width:10ch;
+      font-size:clamp(36px, 8vw, 72px);
+      line-height:.95;
+      letter-spacing:.02em;
+      font-weight:800;
+    }
+    .hero-desc{
+      margin:16px 0 0;
+      max-width:58ch;
+      font-size:15px;
+      color:rgba(243,238,226,.78);
+      line-height:1.85;
+    }
+    .hero-cta{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      margin-top:22px;
+    }
+    .cta{
+      height:44px;
+      padding:0 16px;
+      border-radius:999px;
+      border:1px solid rgba(200,169,110,.2);
+      background:rgba(22,22,22,.72);
+      color:var(--text);
+      cursor:pointer;
+      transition:transform var(--dur) var(--ease), background var(--dur) var(--ease), border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+    }
+    .cta:hover{background:rgba(200,169,110,.08);border-color:rgba(200,169,110,.4);box-shadow:0 0 0 1px rgba(200,169,110,.06) inset}
+    .cta.red{background:linear-gradient(180deg, #df0000, var(--red-dark));border-color:rgba(212,0,0,.5)}
+    .cta.red:hover{background:linear-gradient(180deg, #ef1111, #b00000)}
+    .cta .icon{width:16px;height:16px;display:inline-block}
+
+    .grid-2{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:14px;
+    }
+    .grid-4{
+      display:grid;
+      grid-template-columns:repeat(1, minmax(0, 1fr));
+      gap:14px;
+    }
+    .grid-3{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:14px;
+    }
+    .cards{
+      padding:18px;
+      position:relative;
+      z-index:1;
+    }
+    .hall-card,.zone-card,.treasure-card,.timeline-card{
+      position:relative;
+      min-height:180px;
+      border:1px solid rgba(255,255,255,.06);
+      background:var(--panel);
+      color:var(--text);
+      overflow:hidden;
+      cursor:pointer;
+      text-align:left;
+      padding:0;
+      transition:transform var(--dur) var(--ease), border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+    }
+    .hall-card:hover,.zone-card:hover,.treasure-card:hover,.timeline-card:hover{
+      transform:translateY(-3px);
+      border-color:rgba(200,169,110,.3);
+      box-shadow:0 18px 48px rgba(0,0,0,.36);
+    }
+    .hall-card::before,.zone-card::before,.treasure-card::before,.timeline-card::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(180deg, rgba(0,0,0,.06), rgba(0,0,0,.8));
+      z-index:1;
+      pointer-events:none;
+    }
+    .hall-card{
+      min-height:280px;
+      border-radius:20px;
+      display:flex;
+      align-items:flex-end;
+      background-size:cover;
+      background-position:center;
+    }
+    .hall-card .card-body{
+      position:relative;
+      z-index:2;
+      padding:18px;
+      width:100%;
+    }
+    .hall-name{
+      margin:0;
+      font-size:26px;
+      line-height:1.1;
+      letter-spacing:.03em;
+    }
+    .hall-meta{
+      margin-top:10px;
+      color:rgba(243,238,226,.76);
+      font-size:14px;
+      line-height:1.75;
+      max-width:30ch;
+    }
+    .card-tag{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:7px 10px;
+      margin-top:14px;
+      border-radius:999px;
+      background:rgba(18,18,18,.7);
+      border:1px solid rgba(200,169,110,.18);
+      color:var(--gold);
+      font-size:12px;
+      letter-spacing:.18em;
+    }
+    .card-thumb{
+      height:168px;
+      background-size:cover;
+      background-position:center;
+    }
+    .card-content{
+      position:relative;
+      z-index:2;
+      padding:16px;
+    }
+    .card-title{
+      margin:0;
+      font-size:18px;
+      line-height:1.2;
+    }
+    .card-desc{
+      margin:10px 0 0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.8;
+    }
+    .zone-card,.treasure-card{border-radius:18px}
+    .zone-card{min-height:320px}
+    .treasure-card{min-height:300px}
+    .zone-card .card-thumb,.treasure-card .card-thumb{height:190px}
+    .compact-row{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:14px;
+    }
+
+    .stat-row{
+      display:grid;
+      grid-template-columns:repeat(1, minmax(0, 1fr));
+      gap:14px;
+    }
+    .stat{
+      padding:18px;
+      background:rgba(23,23,23,.86);
+      border:1px solid rgba(200,169,110,.1);
+      border-radius:18px;
+    }
+    .stat-value{
+      font-size:38px;
+      line-height:1;
+      font-weight:800;
+      color:var(--gold);
+      letter-spacing:.02em;
+    }
+    .stat-label{
+      margin-top:8px;
+      font-size:13px;
+      color:var(--muted);
+      letter-spacing:.16em;
+      text-transform:uppercase;
+    }
+    .stat-note{
+      margin-top:10px;
+      font-size:14px;
+      color:rgba(243,238,226,.86);
+      line-height:1.7;
+    }
+
+    .timeline-section{
+      overflow:hidden;
+    }
+    .timeline-rail-wrap{
+      padding:18px;
+      position:relative;
+      z-index:1;
+    }
+    .timeline-controls{
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+      margin-bottom:12px;
+    }
+    .icon-btn{
+      width:40px;
+      height:40px;
+      border-radius:50%;
+      border:1px solid rgba(200,169,110,.18);
+      background:rgba(20,20,20,.84);
+      color:var(--gold);
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      transition:transform var(--dur) var(--ease), background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+    }
+    .icon-btn:hover{background:rgba(200,169,110,.08);border-color:rgba(200,169,110,.35);transform:translateY(-1px)}
+    .timeline{
+      display:flex;
+      gap:14px;
+      overflow:auto;
+      padding:8px 4px 14px;
+      scroll-snap-type:x mandatory;
+      cursor:grab;
+      user-select:none;
+      scrollbar-width:none;
+      -ms-overflow-style:none;
+      touch-action:pan-y;
+    }
+    .timeline::-webkit-scrollbar{display:none}
+    .timeline.dragging{cursor:grabbing}
+    .timeline-card{
+      flex:0 0 min(82vw, 300px);
+      min-height:356px;
+      border-radius:18px;
+      scroll-snap-align:start;
+      display:flex;
+      flex-direction:column;
+      background:var(--panel);
+    }
+    .timeline-card .card-content{padding:14px}
+    .timeline-year{
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:10px;
+      margin:0 0 10px;
+      color:var(--gold);
+      font-size:12px;
+      letter-spacing:.26em;
+      text-transform:uppercase;
+    }
+    .timeline-model{
+      margin:0;
+      font-size:20px;
+      line-height:1.2;
+    }
+    .timeline-spec{
+      margin:10px 0 0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.8;
+    }
+
+    .video-shell{
+      padding:18px;
+      position:relative;
+      z-index:1;
+    }
+    .video-player{
+      position:relative;
+      overflow:hidden;
+      border-radius:22px;
+      background:#000;
+      border:1px solid rgba(200,169,110,.16);
+      aspect-ratio:16 / 9;
+      min-height:220px;
+      box-shadow:var(--shadow);
+    }
+    .video-player video,
+    .video-player .poster{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+    }
+    .video-player .poster{
+      background:url("https://commons.wikimedia.org/wiki/Special:FilePath/Collection%20car%20Mus%C3%A9e%20Ferrari%20011.JPG") center/cover no-repeat;
+      transform:scale(1.02);
+    }
+    .video-player::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.4) 42%, rgba(0,0,0,.76));
+      z-index:1;
+      pointer-events:none;
+    }
+    .player-overlay{
+      position:absolute;
+      inset:auto 18px 18px 18px;
+      z-index:2;
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .play-chip{
+      width:64px;
+      height:64px;
+      border-radius:50%;
+      border:1px solid rgba(200,169,110,.2);
+      background:rgba(10,10,10,.65);
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--gold);
+      cursor:pointer;
+      box-shadow:0 10px 30px rgba(0,0,0,.35);
+      transition:transform var(--dur) var(--ease), background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+    }
+    .play-chip:hover{transform:scale(1.04);background:rgba(200,169,110,.08);border-color:rgba(200,169,110,.45)}
+    .play-copy{
+      max-width:34ch;
+      font-size:14px;
+      line-height:1.7;
+      color:rgba(243,238,226,.78);
+    }
+    .player-state{
+      position:absolute;
+      left:18px;
+      top:18px;
+      z-index:2;
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(18,18,18,.7);
+      border:1px solid rgba(200,169,110,.12);
+      color:var(--gold);
+      font-size:12px;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+    }
+    .video-player.playing .poster{opacity:0;transition:opacity var(--dur) var(--ease)}
+    .video-player.playing .player-state{color:#ffd9a1}
+
+    .anchor-nav{
+      position:fixed;
+      right:18px;
+      top:50%;
+      transform:translateY(-50%);
+      z-index:35;
+      display:none;
+      flex-direction:column;
+      gap:10px;
+      padding:12px 10px;
+      border-radius:999px;
+      background:rgba(18,18,18,.68);
+      border:1px solid rgba(200,169,110,.12);
+      backdrop-filter:blur(12px);
+    }
+    .anchor-nav button{
+      width:12px;
+      height:12px;
+      border-radius:50%;
+      border:1px solid rgba(200,169,110,.46);
+      background:rgba(200,169,110,.12);
+      cursor:pointer;
+      padding:0;
+      position:relative;
+      transition:transform var(--dur) var(--ease), background var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+    }
+    .anchor-nav button::after{
+      content:attr(data-label);
+      position:absolute;
+      right:24px;
+      top:50%;
+      transform:translateY(-50%);
+      white-space:nowrap;
+      opacity:0;
+      pointer-events:none;
+      color:var(--text);
+      font-size:12px;
+      letter-spacing:.16em;
+      background:rgba(18,18,18,.92);
+      border:1px solid rgba(200,169,110,.18);
+      padding:6px 10px;
+      border-radius:999px;
+      transition:opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+    }
+    .anchor-nav button:hover::after{opacity:1;transform:translateY(-50%) translateX(-4px)}
+    .anchor-nav button.active{
+      background:var(--gold);
+      box-shadow:0 0 0 4px rgba(200,169,110,.12);
+    }
+    .anchor-nav button.active::after{opacity:1}
+
+    .back-top{
+      position:fixed;
+      right:18px;
+      bottom:92px;
+      z-index:38;
+      opacity:0;
+      visibility:hidden;
+      transform:translateY(10px);
+      transition:opacity var(--dur) var(--ease), transform var(--dur) var(--ease), visibility 0s linear var(--dur);
+    }
+    .back-top.visible{
+      opacity:1;
+      visibility:visible;
+      transform:translateY(0);
+      transition:opacity var(--dur) var(--ease), transform var(--dur) var(--ease), visibility 0s;
+    }
+
+    .bottom-nav{
+      position:fixed;
+      inset:auto 0 0 0;
+      height:var(--bottombar);
+      z-index:42;
+      background:rgba(18,18,18,.92);
+      backdrop-filter:blur(14px);
+      border-top:1px solid rgba(200,169,110,.16);
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+    }
+    .tab{
+      border:0;
+      background:transparent;
+      color:rgba(243,238,226,.7);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      cursor:pointer;
+      transition:color var(--dur) var(--ease), background var(--dur) var(--ease), transform var(--dur) var(--ease);
+      border-right:1px solid rgba(255,255,255,.03);
+      position:relative;
+    }
+    .tab:last-child{border-right:0}
+    .tab svg{width:19px;height:19px;stroke:currentColor}
+    .tab.active{color:var(--gold);background:linear-gradient(180deg, rgba(200,169,110,.08), transparent)}
+    .tab.active::before{
+      content:"";
+      position:absolute;
+      top:0;
+      left:18%;
+      right:18%;
+      height:2px;
+      background:var(--gold);
+      box-shadow:0 0 18px rgba(200,169,110,.4);
+    }
+    .tab span{font-size:12px;letter-spacing:.08em}
+
+    .reveal{
+      opacity:0;
+      transform:translateY(28px);
+      transition:opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+    }
+    .reveal.visible{opacity:1;transform:translateY(0)}
+
+    .modal{
+      position:fixed;
+      inset:0;
+      z-index:60;
+      opacity:0;
+      visibility:hidden;
+      pointer-events:none;
+      transition:opacity var(--dur) var(--ease), visibility 0s linear var(--dur);
+      background:rgba(6,6,6,.72);
+      backdrop-filter:blur(10px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px 16px;
+    }
+    .modal.open{
+      opacity:1;
+      visibility:visible;
+      pointer-events:auto;
+      transition:opacity var(--dur) var(--ease), visibility 0s;
+    }
+    .modal-panel{
+      width:min(980px, 100%);
+      max-height:min(88vh, 900px);
+      overflow:auto;
+      background:linear-gradient(180deg, #191919, #121212);
+      border:1px solid rgba(200,169,110,.2);
+      box-shadow:0 36px 120px rgba(0,0,0,.65);
+      border-radius:24px;
+    }
+    .modal-hero{
+      min-height:260px;
+      background-size:cover;
+      background-position:center;
+      position:relative;
+    }
+    .modal-hero::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.78));
+    }
+    .modal-body{
+      padding:18px;
+    }
+    .modal-top{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .modal-title{
+      margin:0;
+      font-size:24px;
+      line-height:1.15;
+    }
+    .modal-sub{
+      margin:10px 0 0;
+      color:var(--muted);
+      line-height:1.8;
+      font-size:14px;
+    }
+    .close{
+      width:42px;height:42px;
+      border-radius:50%;
+      border:1px solid rgba(200,169,110,.14);
+      background:rgba(20,20,20,.86);
+      color:var(--gold);
+      cursor:pointer;
+    }
+    .spec-grid{
+      margin-top:18px;
+      display:grid;
+      grid-template-columns:repeat(1, minmax(0, 1fr));
+      gap:10px;
+    }
+    .spec{
+      padding:12px 14px;
+      border-radius:16px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(200,169,110,.08);
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .spec dt{color:var(--gold);font-size:12px;letter-spacing:.18em;text-transform:uppercase}
+    .spec dd{margin:0;color:var(--text);font-size:14px;text-align:right;line-height:1.6}
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:96px;
+      z-index:70;
+      transform:translateX(-50%) translateY(14px);
+      opacity:0;
+      pointer-events:none;
+      background:rgba(18,18,18,.92);
+      color:var(--text);
+      border:1px solid rgba(200,169,110,.2);
+      border-radius:999px;
+      padding:12px 18px;
+      box-shadow:0 24px 60px rgba(0,0,0,.45);
+      transition:opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+      font-size:14px;
+      letter-spacing:.08em;
+    }
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+    .badge-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:14px;
+    }
+    .badge{
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(200,169,110,.1);
+      color:rgba(243,238,226,.86);
+      font-size:12px;
+      letter-spacing:.12em;
+    }
+
+    .footer-note{
+      padding:0 18px 20px;
+      color:rgba(243,238,226,.55);
+      font-size:12px;
+      letter-spacing:.08em;
+      text-align:center;
+    }
+
+    @media (min-width: 720px){
+      .page-shell{padding:32px 28px 44px}
+      .section-head{padding:22px 24px 0}
+      .cards,.timeline-rail-wrap,.video-shell{padding:24px}
+      .hero-inner{padding:40px 24px 34px}
+      .grid-2{grid-template-columns:repeat(2, minmax(0, 1fr))}
+      .grid-3{grid-template-columns:repeat(2, minmax(0, 1fr))}
+      .stat-row{grid-template-columns:repeat(3, minmax(0, 1fr))}
+      .compact-row{grid-template-columns:repeat(2, minmax(0, 1fr))}
+      .spec-grid{grid-template-columns:repeat(2, minmax(0, 1fr))}
+      .section-title{font-size:26px}
+      .hero-title{max-width:12ch}
+    }
+    @media (min-width: 980px){
+      .anchor-nav{display:flex}
+      .grid-4{grid-template-columns:repeat(2, minmax(0, 1fr))}
+      .grid-3{grid-template-columns:repeat(3, minmax(0, 1fr))}
+      .hall-card{min-height:320px}
+      .timeline-card{flex-basis:320px}
+      .hero{
+        min-height:calc(100vh - var(--topbar) - var(--bottombar) - 20px);
+      }
+    }
+    @media (min-width: 1200px){
+      .grid-4{grid-template-columns:repeat(4, minmax(0, 1fr))}
+      .grid-2{grid-template-columns:repeat(2, minmax(0, 1fr))}
+      .hero-title{max-width:10ch}
+    }
+    @media (max-width: 719px){
+      .topbar{padding:0 10px}
+      .topbar-btn{min-width:72px;padding:0 10px}
+      .logo-text{letter-spacing:.24em;font-size:13px}
+      .hero-title{max-width:9ch}
+      .hall-card,.zone-card,.treasure-card,.timeline-card{border-radius:18px}
+      .hero{min-height:calc(100vh - var(--topbar) - var(--bottombar) - 12px)}
+      .anchor-nav{display:none!important}
+      .back-top{right:14px;bottom:88px}
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <header class="topbar">
+      <button class="topbar-btn" id="backBtn" type="button" aria-label="返回上一页">
+        <span aria-hidden="true">←</span><span>返回</span>
+      </button>
+      <button class="logo-btn" id="logoBtn" type="button" aria-label="返回首页">
+        <span class="logo-mark" aria-hidden="true"></span>
+        <span class="logo-text">三和老爷车博物馆</span>
+      </button>
+      <div style="width:88px"></div>
+    </header>
+
+    <main class="main" id="main">
+      <section class="page active" data-page="home" id="page-home">
+        <div class="page-scroll" data-scroll="home">
+          <div class="page-shell">
+            <section class="section hero reveal" data-anchor="home-hero" data-anchor-label="序幕">
+              <div class="hero-inner">
+                <div class="hero-kicker">Sanhe Classic Car Museum</div>
+                <h1 class="hero-title">三和老爷车博物馆线上展馆</h1>
+                <p class="hero-desc">
+                  这里是面向公众开放的线上展馆入口。你可以在首页进入一楼主展馆，查看汽车起源、黄铜时期、GT 跑车与经典国车的实拍藏品，也可以切换到跃马传奇馆，沿着跃马进化史追踪法拉利的时代脉络。
+                </p>
+                <div class="hero-cta">
+                  <button class="cta red" type="button" data-go-page="main">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 12h16M12 4l8 8-8 8"/></svg>
+                    进入一楼主展馆
+                  </button>
+                  <button class="cta" type="button" data-go-page="ferrari">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 12h16M12 4l8 8-8 8"/></svg>
+                    进入跃马传奇馆
+                  </button>
+                </div>
+                <div class="badge-row">
+                  <span class="badge">单页多视图</span>
+                  <span class="badge">历史栈返回</span>
+                  <span class="badge">暗调实拍</span>
+                  <span class="badge">移动端优先</span>
+                </div>
+              </div>
+            </section>
+
+            <section class="section reveal" data-anchor="home-entries" data-anchor-label="入口">
+              <div class="section-head">
+                <div class="eyebrow">Exhibitions</div>
+                <h2 class="section-title">两个主入口</h2>
+                <p class="section-copy">点击任意入口卡片即可切换到对应展馆，页面会保留浏览历史，支持逐级返回。</p>
+              </div>
+              <div class="cards grid-2">
+                <button class="hall-card" type="button" data-go-page="main" style="background-image:linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.72)), url('https://commons.wikimedia.org/wiki/Special:FilePath/Rolls-Royce%20Biplace%20Silver%20Ghost%201912%20Mulhouse%20FRA%20001.JPG');">
+                  <div class="card-body">
+                    <h3 class="hall-name">一楼主展馆</h3>
+                    <div class="hall-meta">汽车起源、黄铜时期、GT 跑车与经典国车，以时间线与藏品群像呈现汽车工业的前世今生。</div>
+                    <span class="card-tag">主展馆 / 进入</span>
+                  </div>
+                </button>
+                <button class="hall-card" type="button" data-go-page="ferrari" style="background-image:linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.72)), url('https://commons.wikimedia.org/wiki/Special:FilePath/Ferrari%20LaFerrari%20at%20the%20Ferrari%20museum.jpg');">
+                  <div class="card-body">
+                    <h3 class="hall-name">跃马传奇馆</h3>
+                    <div class="hall-meta">从 125 S 到 SF90 Stradale，穿过七代车型的进化史，感受跃马品牌的赛道精神与速度信仰。</div>
+                    <span class="card-tag">跃马馆 / 进入</span>
+                  </div>
+                </button>
+              </div>
+            </section>
+
+            <section class="section reveal" data-anchor="home-guide" data-anchor-label="导览">
+              <div class="section-head">
+                <div class="eyebrow">Guide</div>
+                <h2 class="section-title">浏览方式</h2>
+                <p class="section-copy">
+                  顶部返回按钮支持逐级回退，底部 Tab 可随时切馆，桌面端右侧圆点可在当前页面内部快速定位。所有展区卡片、车型卡片与镇馆之宝卡片都可点开详情弹窗。
+                </p>
+              </div>
+              <div class="cards compact-row">
+                <div class="stat">
+                  <div class="stat-value">03</div>
+                  <div class="stat-label">Pages</div>
+                  <div class="stat-note">首页、一楼主展馆、跃马传奇馆，三个视图共用一个单页结构。</div>
+                </div>
+                <div class="stat">
+                  <div class="stat-value">360</div>
+                  <div class="stat-label">Preview Slot</div>
+                  <div class="stat-note">两个展馆各保留一个 360° 全景漫游入口，点击后显示“功能接入中”。</div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" data-page="main" id="page-main">
+        <div class="page-scroll" data-scroll="main">
+          <div class="page-shell">
+            <section class="section reveal" data-anchor="main-overview" data-anchor-label="展区">
+              <div class="section-head">
+                <div class="eyebrow">First Floor</div>
+                <h2 class="section-title">一楼主展馆</h2>
+                <p class="section-copy">这一层把汽车工业的源头与经典藏品串联起来。点击任意展区卡片可查看详情规格。</p>
+              </div>
+              <div class="cards grid-4">
+                <button class="zone-card reveal-card" type="button" data-card-id="origin" data-kind="zone">
+                  <div class="card-thumb" style="background-image:url('https://commons.wikimedia.org/wiki/Special:FilePath/1886%20Benz%20Patent%20Motorwagen%2C%20Tellus%20Science%20Museum.jpg');"></div>
+                  <div class="card-content">
+                    <h3 class="card-title">汽车起源展区</h3>
+                    <p class="card-desc">从第一辆汽车的原型开始，追索内燃机、底盘与机械构造的早期答案。</p>
+                    <span class="card-tag">点击查看规格</span>
+                  </div>
+                </button>
+                <button class="zone-card reveal-card" type="button" data-card-id="brass" data-kind="zone">
+                  <div class="card-thumb" style="background-image:url('https://commons.wikimedia.org/wiki/Special:FilePath/1910%20Rolls-Royce%20Silver%20Ghost%20Tourer%20%281419230816%29.jpg');"></div>
+                  <div class="card-content">
+                    <h3 class="card-title">黄铜时期展区</h3>
+                    <p class="card-desc">镀铬、黄铜、长车头与礼仪感，是汽车从工具走向时代符号的关键阶段。</p>
+                    <span class="card-tag">点击查看规格</span>
+                  </div>
+                </button>
+                <button class="zone-card reveal-card" type="button" data-card-id="gt" data-kind="zone">
+                  <div class="card-thumb" style="background-image:url('https://commons.wikimedia.org/wiki/Special:FilePath/Ferrari%20288%20GTO%20front.jpg');"></div>
+                  <div class="card-content">
+                    <h3 class="card-title">GT 跑车展区</h3>
+                    <p class="card-desc">高性能与长途舒适并置，线条更锋利，速度与优雅共同成立。</p>
+                    <span class="card-tag">点击查看规格</span>
+                  </div>
+                </button>
+                <button class="zone-card reveal-card" type="button" data-card-id="national" data-kind="zone">
+                  <div class="card-thumb" style="background-image:url('https://commons.wikimedia.org/wiki/Special:FilePath/1959%20Hongqi%20CA72%2004%20--%20Shanghai%20Automobile%20Museum%20morecontrast.JPG');"></div>
+                  <div class="card-content">
+                    <h3 class="card-title">经典国车展区</h3>
+                    <p class="card-desc">以庄重造型和时代记忆为核心，呈现中国经典公务与礼宾车辆的气质。</p>
+                    <span class="card-tag">点击查看规格</span>
+                  </div>
+                </button>
+              </div>
+            </section>
+
+            <section class="section reveal" data-anchor="main-treasures" data-anchor-label="宝藏">
+              <div class="section-head">
+                <div class="eyebrow">Treasures</div>
+                <h2 class="section-title">镇馆之宝</h2>
+                <p class="section-copy">三件代表性藏品以大图呈现，点击即可打开参数规格栏。</p>
+              </div>
+              <div class="cards grid-3">
+                <button class="treasure-card reveal-card" type="button" data-card-id="benz-one" data-kind="treasure">
+                  <div class="card-thumb" style="background-image:url('https://commons.wikimedia.org/wiki/Special:FilePath/1886%20Benz%20Patent%20Motorwagen%2C%20Tellus%20Science%20Museum.jpg');"></div>
+                  <div class="card-content">
+                    <h3 class="card-title">奔驰一号</h3>
+                    <p class="card-desc">现代汽车史上的原点级作品，机械车身与动力传动的起步样本。</p>
+                    <span class="card-tag">镇馆之宝</span>
+                  </div>
+                </button>
+                <button class="treasure-card reveal-card" type="button" data-card-id="silver-ghost" data-kind="treasure">
+                  <div class="card-thumb" style="background-image:url('file:///var/folders/kr/4lbsl_397db5tbq3xwd5qf680000gn/T/codex-clipboard-37f692a5-7693-4ca6-b6ce-93228865e365.png');"></div>
+                  <div class="card-content">
+                    <h3 class="card-title">劳斯莱斯银魂</h3>
+                    <p class="card-desc">以静谧、精工和礼宾气质著称，代表黄铜年代的顶级工艺标准。</p>
+                    <span class="card-tag">镇馆之宝</span>
+                  </div>
+                </button>
+                <button class="treasure-card reveal-card" type="button" data-card-id="hongqi-ca72" data-kind="treasure">
+                  <div class="card-thumb" style="background-image:url('https://commons.wikimedia.org/wiki/Special:FilePath/Hongqi%20CA72%201959.jpg');"></div>
+                  <div class="card-content">
+                    <h3 class="card-title">红旗 CA72</h3>
+                    <p class="card-desc">带有鲜明时代烙印的国车代表，兼具庄重气场与历史纪念意义。</p>
+                    <span class="card-tag">镇馆之宝</span>
+                  </div>
+                </button>
+              </div>
+            </section>
+
+            <section class="section reveal" data-anchor="main-tour" data-anchor-label="漫游">
+              <div class="section-head">
+                <div class="eyebrow">360 Preview</div>
+                <h2 class="section-title">全景漫游入口</h2>
+                <p class="section-copy">这里保留一楼主展馆的 360° 全景漫游按钮，当前仅提示接入状态。</p>
+              </div>
+              <div class="cards">
+                <button class="cta red" type="button" data-virtual-tour="main" data-tour-url="https://www.720yun.com/vr/c05jedsm5y8">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3c4.97 0 9 2.24 9 5s-4.03 5-9 5-9-2.24-9-5 4.03-5 9-5Z"/><path d="M3 8v8c0 2.76 4.03 5 9 5s9-2.24 9-5V8"/></svg>
+                  360° 全景漫游
+                </button>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" data-page="ferrari" id="page-ferrari">
+        <div class="page-scroll" data-scroll="ferrari">
+          <div class="page-shell">
+            <section class="section reveal" data-anchor="ferrari-video" data-anchor-label="视频">
+              <div class="section-head">
+                <div class="eyebrow">Ferrari Hall</div>
+                <h2 class="section-title">跃马传奇馆</h2>
+                <p class="section-copy">封面海报已预置，视频源位留空；点击播放后播放器会进入播放状态，切换页面时自动暂停。</p>
+              </div>
+              <div class="video-shell">
+                <div class="video-player" id="videoPlayer">
+                  <div class="poster" aria-hidden="true"></div>
+                  <video id="hallVideo" poster="https://commons.wikimedia.org/wiki/Special:FilePath/Ferrari%20LaFerrari%20at%20the%20Ferrari%20museum.jpg" preload="none" playsinline></video>
+                  <div class="player-state" id="playerState">READY</div>
+                  <div class="player-overlay">
+                    <button class="play-chip" id="playBtn" type="button" aria-label="播放视频">
+                      <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+                    </button>
+                    <div class="play-copy">
+                      点击封面播放位。这里保留的是完整的视频播放器结构，当前仅承载封面海报与交互状态。
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="section reveal timeline-section" data-anchor="ferrari-timeline" data-anchor-label="进化史">
+              <div class="section-head">
+                <div class="eyebrow">Evolution</div>
+                <h2 class="section-title">跃马进化史</h2>
+                <p class="section-copy">横向滑动时间轴支持左右按钮、鼠标拖拽与触屏滑动。每一张车型卡片都可打开详情弹窗。</p>
+              </div>
+              <div class="timeline-rail-wrap">
+                <div class="timeline-controls">
+                  <button class="icon-btn" id="timelinePrev" type="button" aria-label="向左滑动">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 6 9 12l6 6"/></svg>
+                  </button>
+                  <button class="icon-btn" id="timelineNext" type="button" aria-label="向右滑动">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 6 6 6-6 6"/></svg>
+                  </button>
+                </div>
+                <div class="timeline" id="timeline">
+                  <button class="timeline-card" type="button" data-card-id="ferrari-125s" data-kind="timeline">
+                    <div class="card-thumb" style="background-image:url('https://commons.wikimedia.org/wiki/Special:FilePath/Ferrari%20125%20S.jpg');"></div>
+                    <div class="card-content">
+                      <div class="timeline-year">1947</div>
+                      <h3 class="timeline-model">125 S</h3>
+                      <p class="timeline-spec">跃马品牌的第一步，作为赛道与公路之间的原始记号，开启新篇章。</p>
+                    </div>
+                  </button>
+                  <button class="timeline-card" type="button" data-card-id="ferrari-288gto" data-kind="timeline">
+                    <div class="card-thumb" style="background-image:url('https://commons.wikimedia.org/wiki/Special:FilePath/Ferrari%20288%20GTO%20front.jpg');"></div>
+                    <div class="card-content">
+                      <div class="timeline-year">1984</div>
+                      <h3 class="timeline-model">288 GTO</h3>
+                      <p class="timeline-spec">以赛道认证为导向的街车代表，性能和稀有度共同构成标志性地位。</p>
+                    </div>
+                  </button>
+                  <button class="timeline-card" type="button" data-card-id="ferrari-f40" data-kind="timeline">
+                    <div class="card-thumb" style="background-image:url('https://commons.wikimedia.org/wiki/Special:FilePath/Red%20Ferrari%20F40%20Side%20View.jpg');"></div>
+                    <div class="card-content">
+                      <div class="timeline-year">1987</div>
+                      <h3 class="timeline-model">F40</h3>
+                      <p class="timeline-spec">轻量化、机械感和极致性能合为一体，成为整个时代的速度图腾。</p>
+                    </div>
+                  </button>
+                  <button class="timeline-card" type="button" data-card-id="ferrari-f50" data-kind="timeline">
+                    <div class="card-thumb" style="background-image:url('file:///var/folders/kr/4lbsl_397db5tbq3xwd5qf680000gn/T/codex-clipboard-a4288bd6-da30-4882-95ff-924fb51210a7.png');"></div>
+                    <div class="card-content">
+                      <div class="timeline-year">1995</div>
+                      <h3 class="timeline-model">F50</h3>
+                      <p class="timeline-spec">把 F1 技术与公路性能重新编排，强调纯粹驾驶与空气动力学表现。</p>
+                    </div>
+                  </button>
+                  <button class="timeline-card" type="button" data-card-id="ferrari-enzo" data-kind="timeline">
+                    <div class="card-thumb" style="background-image:url('https://commons.wikimedia.org/wiki/Special:FilePath/Enzo_side.JPG');"></div>
+                    <div class="card-content">
+                      <div class="timeline-year">2002</div>
+                      <h3 class="timeline-model">Enzo</h3>
+                      <p class="timeline-spec">以空气动力学、碳纤维与赛道科技重新定义当代旗舰超跑。</p>
+                    </div>
+                  </button>
+                  <button class="timeline-card" type="button" data-card-id="ferrari-laferrari" data-kind="timeline">
+                    <div class="card-thumb" style="background-image:url('https://commons.wikimedia.org/wiki/Special:FilePath/Ferrari%20LaFerrari%20at%20the%20Ferrari%20museum.jpg');"></div>
+                    <div class="card-content">
+                      <div class="timeline-year">2013</div>
+                      <h3 class="timeline-model">LaFerrari</h3>
+                      <p class="timeline-spec">混动时代的跃马答案，把电动化补进纯正的性能语法中。</p>
+                    </div>
+                  </button>
+                  <button class="timeline-card" type="button" data-card-id="ferrari-sf90" data-kind="timeline">
+                    <div class="card-thumb" style="background-image:url('https://commons.wikimedia.org/wiki/Special:FilePath/Ferrari%20SF90%20Stradale%203.jpg');"></div>
+                    <div class="card-content">
+                      <div class="timeline-year">2019</div>
+                      <h3 class="timeline-model">SF90 Stradale</h3>
+                      <p class="timeline-spec">用可量产的混动旗舰诠释新时代的速度与技术密度。</p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            <section class="section reveal" data-anchor="ferrari-stats" data-anchor-label="数字">
+              <div class="section-head">
+                <div class="eyebrow">Metrics</div>
+                <h2 class="section-title">数据数字计数</h2>
+                <p class="section-copy">进入跃马馆时，以下数字会自动滚动计数，形成视觉上的仪式感。</p>
+              </div>
+              <div class="cards stat-row">
+                <div class="stat">
+                  <div class="stat-value" data-count="7">0</div>
+                  <div class="stat-label">Models</div>
+                  <div class="stat-note">跃马进化史完整陈列 7 款代表车型。</div>
+                </div>
+                <div class="stat">
+                  <div class="stat-value" data-count="1947">0</div>
+                  <div class="stat-label">Start Year</div>
+                  <div class="stat-note">从 1947 年起，跃马故事正式写下第一章。</div>
+                </div>
+                <div class="stat">
+                  <div class="stat-value" data-count="76">0</div>
+                  <div class="stat-label">Years</div>
+                  <div class="stat-note">品牌跨越 70 余年，持续影响超跑审美与性能标准。</div>
+                </div>
+              </div>
+            </section>
+
+            <section class="section reveal" data-anchor="ferrari-tour" data-anchor-label="漫游">
+              <div class="section-head">
+                <div class="eyebrow">360 Preview</div>
+                <h2 class="section-title">全景漫游入口</h2>
+                <p class="section-copy">这里保留跃马传奇馆的 360° 全景漫游按钮，当前仅提示接入状态。</p>
+              </div>
+              <div class="cards">
+                <button class="cta red" type="button" data-virtual-tour="ferrari" data-tour-url="https://www.720yun.com/vr/8a3je5untu7">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3c4.97 0 9 2.24 9 5s-4.03 5-9 5-9-2.24-9-5 4.03-5 9-5Z"/><path d="M3 8v8c0 2.76 4.03 5 9 5s9-2.24 9-5V8"/></svg>
+                  360° 全景漫游
+                </button>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <nav class="anchor-nav" id="anchorNav" aria-label="页面锚点导航"></nav>
+    <button class="back-top icon-btn" id="backTop" type="button" aria-label="返回顶部">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 14 6-6 6 6"/><path d="M12 8v12"/></svg>
+    </button>
+    <nav class="bottom-nav" aria-label="全局导航">
+      <button class="tab active" type="button" data-go-page="home">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M6 10v10h5v-6h2v6h5V10"/></svg>
+        <span>首页</span>
+      </button>
+      <button class="tab" type="button" data-go-page="main">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" aria-hidden="true"><path d="M4 19h16"/><path d="M6 17V7h12v10"/><path d="M8 7V4h8v3"/><path d="M9 17v-4h6v4"/></svg>
+        <span>主展馆</span>
+      </button>
+      <button class="tab" type="button" data-go-page="ferrari">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" aria-hidden="true"><path d="M5 15c1.5-3 3.5-5 7-5 3.8 0 5.5 2 7 5"/><path d="M7 15a2 2 0 1 0 0 .1"/><path d="M17 15a2 2 0 1 0 0 .1"/><path d="M11 8h2"/></svg>
+        <span>跃马馆</span>
+      </button>
+    </nav>
+
+    <div class="modal" id="modal" aria-hidden="true">
+      <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-hero" id="modalHero"></div>
+        <div class="modal-body">
+          <div class="modal-top">
+            <div>
+              <h3 class="modal-title" id="modalTitle"></h3>
+              <p class="modal-sub" id="modalSub"></p>
+            </div>
+            <button class="close" id="modalClose" type="button" aria-label="关闭弹窗">×</button>
+          </div>
+          <dl class="spec-grid" id="modalSpecs"></dl>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast">功能接入中</div>
+  </div>
+
+  <script>
+    (() => {
+      const pageOrder = ['home', 'main', 'ferrari'];
+      const pages = new Map([...document.querySelectorAll('.page')].map(el => [el.dataset.page, el]));
+      const scrollEls = new Map([...document.querySelectorAll('.page-scroll')].map(el => [el.dataset.scroll, el]));
+      const bottomTabs = [...document.querySelectorAll('.tab')];
+      const anchorNav = document.getElementById('anchorNav');
+      const backBtn = document.getElementById('backBtn');
+      const logoBtn = document.getElementById('logoBtn');
+      const backTop = document.getElementById('backTop');
+      const modal = document.getElementById('modal');
+      const modalHero = document.getElementById('modalHero');
+      const modalTitle = document.getElementById('modalTitle');
+      const modalSub = document.getElementById('modalSub');
+      const modalSpecs = document.getElementById('modalSpecs');
+      const modalClose = document.getElementById('modalClose');
+      const toast = document.getElementById('toast');
+      const videoPlayer = document.getElementById('videoPlayer');
+      const hallVideo = document.getElementById('hallVideo');
+      const playBtn = document.getElementById('playBtn');
+      const playerState = document.getElementById('playerState');
+      const timeline = document.getElementById('timeline');
+      const timelinePrev = document.getElementById('timelinePrev');
+      const timelineNext = document.getElementById('timelineNext');
+      const revealTargets = [...document.querySelectorAll('.reveal')];
+      const cardButtons = [...document.querySelectorAll('[data-card-id]')];
+      const tourButtons = [...document.querySelectorAll('[data-virtual-tour]')];
+      const pageScrolls = Object.fromEntries([...scrollEls.entries()]);
+
+      const itemData = {
+        origin: {
+          title: '汽车起源展区',
+          image: 'https://upload.wikimedia.org/wikipedia/commons/3/33/1886_Benz_Patent_Motor_Car_%28Reconstruction%29_photo4.JPG',
+          sub: '这一展区聚焦汽车发明初期的机械构型，强调动力、车轮、转向与车身的原始关系。',
+          specs: { 时期: '19 世纪末', 核心展项: '奔驰一号复原车', 风格关键词: '发明、原型、机械起点', 观展重点: '汽车诞生语境' }
+        },
+        brass: {
+          title: '黄铜时期展区',
+          image: 'https://upload.wikimedia.org/wikipedia/commons/9/91/1925_Rolls-Royce_Springfield_Silver_Ghost_Piccadilly_Roadster.jpg',
+          sub: '黄铜时期以工艺、礼仪感和长车头比例著称，是汽车从实验品走向高端消费品的重要阶段。',
+          specs: { 时期: '1900s-1920s', 核心展项: '劳斯莱斯银魂', 风格关键词: '黄铜、镀铬、礼宾感', 观展重点: '豪华车起源' }
+        },
+        gt: {
+          title: 'GT 跑车展区',
+          image: 'https://upload.wikimedia.org/wikipedia/commons/0/05/Enzo_side.JPG',
+          sub: 'GT 兼顾长途舒适与高速性能，强调动力系统、空气动力学和优雅比例的统一。',
+          specs: { 时期: '高性能时代', 核心展项: 'GT 超跑系列', 风格关键词: '速度、舒适、优雅', 观展重点: '公路与赛道的平衡' }
+        },
+        national: {
+          title: '经典国车展区',
+          image: 'https://upload.wikimedia.org/wikipedia/commons/5/5b/Hongqi_CA770_sedan.jpg',
+          sub: '以经典国车为主线，呈现礼宾、行政与时代记忆交织出的中国汽车美学。',
+          specs: { 时期: '20 世纪中后期', 核心展项: '红旗 CA72 / CA770', 风格关键词: '庄重、时代、礼宾', 观展重点: '国车设计语言' }
+        },
+        'benz-one': {
+          title: '奔驰一号',
+          image: 'https://upload.wikimedia.org/wikipedia/commons/3/33/1886_Benz_Patent_Motor_Car_%28Reconstruction%29_photo4.JPG',
+          sub: '现代汽车史的原点级作品，代表从马车时代向机械时代的跨越。',
+          specs: { 年代: '1886 年', 动力: '单缸汽油机', 结构: '三轮车身', 意义: '汽车发明象征' }
+        },
+        'silver-ghost': {
+          title: '劳斯莱斯银魂',
+          image: 'file:///var/folders/kr/4lbsl_397db5tbq3xwd5qf680000gn/T/codex-clipboard-37f692a5-7693-4ca6-b6ce-93228865e365.png',
+          sub: '银魂以精密制造与静谧表现闻名，被视为豪华汽车工艺的经典坐标。',
+          specs: { 年代: '1912 年', 底盘: '长轴距豪华底盘', 特征: '静音、平顺、礼宾', 意义: '黄铜时期标杆' }
+        },
+        'hongqi-ca72': {
+          title: '红旗 CA72',
+          image: 'https://upload.wikimedia.org/wikipedia/commons/5/5b/Hongqi_CA770_sedan.jpg',
+          sub: '极具时代辨识度的国车代表，承载礼仪、纪念和国家汽车工业记忆。',
+          specs: { 年代: '1958-1960s', 级别: '礼宾轿车', 特征: '大气、稳重、典礼感', 意义: '中国经典国车' }
+        },
+        'ferrari-125s': {
+          title: '1947 Ferrari 125 S',
+          image: 'https://upload.wikimedia.org/wikipedia/commons/2/28/Ferrari_125_S.jpg',
+          sub: '品牌的第一台正式作品，标志跃马历史从赛场出发。',
+          specs: { 年份: '1947', 发动机: '1.5L V12', 定位: '品牌首作', 关键词: '起点、赛道、开创' }
+        },
+        'ferrari-288gto': {
+          title: '1984 Ferrari 288 GTO',
+          image: 'https://upload.wikimedia.org/wikipedia/commons/2/27/Ferrari_288_GTO_%281%29.JPG',
+          sub: '以集团 B/竞赛车逻辑塑造的传奇街车，具备鲜明的赛道气质。',
+          specs: { 年份: '1984', 发动机: '2.9L V8 双涡轮', 定位: '限量性能车', 关键词: '稀有、赛道、暴力美学' }
+        },
+        'ferrari-f40': {
+          title: '1987 Ferrari F40',
+          image: 'https://upload.wikimedia.org/wikipedia/commons/9/9d/Red_Ferrari_F40_Side_View.jpg',
+          sub: 'F40 是纯粹性能时代的极端样本，强调轻量化与机械感。',
+          specs: { 年份: '1987', 发动机: '2.9L V8 双涡轮', 特征: '无妥协轻量化', 关键词: '硬核、轻、快' }
+        },
+        'ferrari-f50': {
+          title: '1995 Ferrari F50',
+          image: 'file:///var/folders/kr/4lbsl_397db5tbq3xwd5qf680000gn/T/codex-clipboard-a4288bd6-da30-4882-95ff-924fb51210a7.png',
+          sub: '把 F1 技术从赛道带向公路，形成更接近赛车的道路表达。',
+          specs: { 年份: '1995', 发动机: '4.7L V12', 特征: '敞开式驾驶感', 关键词: '技术转译、纯粹' }
+        },
+        'ferrari-enzo': {
+          title: '2002 Ferrari Enzo',
+          image: 'https://upload.wikimedia.org/wikipedia/commons/0/05/Enzo_side.JPG',
+          sub: '以航空和赛车思维重建超跑叙事，是新世纪旗舰的典型代表。',
+          specs: { 年份: '2002', 发动机: '6.0L V12', 特征: '碳纤维车身', 关键词: '空气动力学、旗舰' }
+        },
+        'ferrari-laferrari': {
+          title: '2013 Ferrari LaFerrari',
+          image: 'https://upload.wikimedia.org/wikipedia/commons/5/55/Ferrari_LaFerrari_at_Grand_Basel_2018_09.jpg',
+          sub: '混动技术进入跃马体系后的高峰作品，把性能和电气化并置。',
+          specs: { 年份: '2013', 动力: 'V12 + HY-KERS', 特征: '混动旗舰', 关键词: '电气化、巅峰' }
+        },
+        'ferrari-sf90': {
+          title: '2019 Ferrari SF90 Stradale',
+          image: 'https://upload.wikimedia.org/wikipedia/commons/7/7d/Red_2019_Ferrari_SF90_Stradale_%2848264238897%29_%28cropped%29.jpg',
+          sub: '可量产的插混旗舰，继续书写速度与技术融合的当代语法。',
+          specs: { 年份: '2019', 动力: 'V8 插混', 特征: '四驱 / 高性能', 关键词: '新世代、效率、性能' }
+        }
+      };
+
+      const state = {
+        currentPage: 'home',
+        history: ['home'],
+        scrollPositions: { home: 0, main: 0, ferrari: 0 },
+        leavingTimer: null,
+        activeAnchorPage: 'home',
+        observers: [],
+        countersPlayed: false,
+        videoPlaying: false,
+        modalOpen: false,
+        scrollWired: false
+      };
+
+      function setActiveTab(page) {
+        bottomTabs.forEach(tab => tab.classList.toggle('active', tab.dataset.goPage === page));
+        backBtn.setAttribute('aria-disabled', state.history.length <= 1 ? 'true' : 'false');
+      }
+
+      function currentScrollEl() {
+        return pageScrolls[state.currentPage];
+      }
+
+      function getSectionsForPage(page) {
+        const pageEl = pages.get(page);
+        return [...pageEl.querySelectorAll('[data-anchor]')].map(el => ({
+          id: el.dataset.anchor,
+          label: el.dataset.anchorLabel,
+          el
+        }));
+      }
+
+      function renderAnchorNav(page) {
+        const sections = getSectionsForPage(page);
+        anchorNav.innerHTML = sections.map((sec, index) => (
+          `<button type="button" data-target="${sec.id}" data-label="${sec.label}" aria-label="${sec.label}" class="${index === 0 ? 'active' : ''}"></button>`
+        )).join('');
+        anchorNav.querySelectorAll('button').forEach(btn => {
+          btn.addEventListener('click', () => scrollToAnchor(page, btn.dataset.target));
+        });
+      }
+
+      function updateAnchorHighlight(page, sectionId) {
+        if (state.activeAnchorPage !== page) return;
+        anchorNav.querySelectorAll('button').forEach(btn => btn.classList.toggle('active', btn.dataset.target === sectionId));
+      }
+
+      function attachRevealObserver(page) {
+        const scroller = pageScrolls[page];
+        const root = scroller;
+        const targets = [...pages.get(page).querySelectorAll('.reveal')];
+        state.observers.forEach(o => o.disconnect());
+        state.observers = [];
+
+        const revealObserver = new IntersectionObserver(entries => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) entry.target.classList.add('visible');
+          });
+        }, { root, threshold: 0.15 });
+
+        const anchorObserver = new IntersectionObserver(entries => {
+          const visible = entries.filter(entry => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+          if (visible[0]) updateAnchorHighlight(page, visible[0].target.dataset.anchor);
+        }, { root, threshold: [0.25, 0.5, 0.75] });
+
+        targets.forEach(el => {
+          el.classList.remove('visible');
+          revealObserver.observe(el);
+        });
+        [...pages.get(page).querySelectorAll('[data-anchor]')].forEach(el => anchorObserver.observe(el));
+        state.observers.push(revealObserver, anchorObserver);
+      }
+
+      function animateCounters(page) {
+        if (page !== 'ferrari' || state.countersPlayed) return;
+        state.countersPlayed = true;
+        const counters = [...pages.get('ferrari').querySelectorAll('[data-count]')];
+        const duration = 1100;
+        const start = performance.now();
+
+        const step = now => {
+          const progress = Math.min(1, (now - start) / duration);
+          const ease = 1 - Math.pow(1 - progress, 3);
+          counters.forEach(el => {
+            const target = Number(el.dataset.count);
+            const value = Math.round(target * ease);
+            el.textContent = String(value);
+          });
+          if (progress < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      }
+
+      function setPageInstant(page, { replace = false } = {}) {
+        state.currentPage = page;
+        pages.forEach((pageEl, key) => {
+          pageEl.classList.toggle('active', key === page);
+          pageEl.classList.remove('enter-from-left', 'enter-from-right', 'leaving-forward', 'leaving-back');
+        });
+        state.activeAnchorPage = page;
+        setActiveTab(page);
+        renderAnchorNav(page);
+        attachRevealObserver(page);
+        restoreScroll(page);
+        if (replace) history.replaceState({ page }, '', `#${page}`);
+      }
+
+      function restoreScroll(page) {
+        const scroller = pageScrolls[page];
+        requestAnimationFrame(() => {
+          scroller.scrollTop = state.scrollPositions[page] || 0;
+          handleScroll(page);
+          if (page === 'ferrari') animateCounters(page);
+        });
+      }
+
+      function closeModal() {
+        state.modalOpen = false;
+        modal.classList.remove('open');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function openModal(item) {
+        state.modalOpen = true;
+        modalHero.style.backgroundImage = `linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.76)), url('${item.image}')`;
+        modalTitle.textContent = item.title;
+        modalSub.textContent = item.sub;
+        modalSpecs.innerHTML = Object.entries(item.specs).map(([key, value]) => (
+          `<div class="spec"><dt>${key}</dt><dd>${value}</dd></div>`
+        )).join('');
+        modal.classList.add('open');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function showToast(text) {
+        toast.textContent = text;
+        toast.classList.add('show');
+        clearTimeout(showToast.timer);
+        showToast.timer = setTimeout(() => toast.classList.remove('show'), 1800);
+      }
+
+      function pauseVideo() {
+        if (!hallVideo) return;
+        try { hallVideo.pause(); } catch (_) {}
+        videoPlayer.classList.remove('playing');
+        playerState.textContent = 'READY';
+        state.videoPlaying = false;
+      }
+
+      function toggleVideo() {
+        if (state.videoPlaying) {
+          pauseVideo();
+          return;
+        }
+        videoPlayer.classList.add('playing');
+        playerState.textContent = 'PLAYING';
+        state.videoPlaying = true;
+        const playPromise = hallVideo.play?.();
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch(() => {});
+        }
+      }
+
+      function scrollToAnchor(page, anchorId) {
+        const scroller = pageScrolls[page];
+        const target = pages.get(page).querySelector(`[data-anchor="${anchorId}"]`);
+        if (!target) return;
+        const top = target.offsetTop - 12;
+        scroller.scrollTo({ top, behavior: 'smooth' });
+      }
+
+      function handleScroll(page) {
+        const scroller = pageScrolls[page];
+        const top = scroller.scrollTop;
+        state.scrollPositions[page] = top;
+        backTop.classList.toggle('visible', top > 300);
+        const btn = backBtn;
+        btn.setAttribute('aria-disabled', state.history.length <= 1 ? 'true' : 'false');
+      }
+
+      function nextPage(current, dir) {
+        const index = pageOrder.indexOf(current);
+        const nextIndex = Math.max(0, Math.min(pageOrder.length - 1, index + dir));
+        return pageOrder[nextIndex];
+      }
+
+      function switchPage(page, options = {}) {
+        const from = state.currentPage;
+        if (page === from && !options.force) return;
+
+        const fromIndex = pageOrder.indexOf(from);
+        const toIndex = pageOrder.indexOf(page);
+        const dir = options.direction || (toIndex > fromIndex ? 1 : -1);
+        const enteringClass = dir >= 0 ? 'enter-from-right' : 'enter-from-left';
+        const leavingClass = dir >= 0 ? 'leaving-forward' : 'leaving-back';
+        const fromEl = pages.get(from);
+        const toEl = pages.get(page);
+
+        clearTimeout(state.leavingTimer);
+        state.scrollPositions[from] = currentScrollEl().scrollTop;
+        pauseVideo();
+
+        if (options.replace) {
+          setPageInstant(page, { replace: true });
+          history.replaceState({ page }, '', `#${page}`);
+          return;
+        }
+
+        pages.forEach(el => el.classList.remove('enter-from-left', 'enter-from-right', 'leaving-forward', 'leaving-back'));
+        toEl.classList.add('active', enteringClass);
+        fromEl.classList.add(leavingClass);
+        requestAnimationFrame(() => {
+          toEl.classList.remove(enteringClass);
+        });
+
+        state.currentPage = page;
+        state.activeAnchorPage = page;
+        setActiveTab(page);
+        renderAnchorNav(page);
+        attachRevealObserver(page);
+        restoreScroll(page);
+        if (!options.fromHistory) {
+          state.history.push(page);
+          history.pushState({ page }, '', `#${page}`);
+        }
+
+        state.leavingTimer = setTimeout(() => {
+          fromEl.classList.remove('active', leavingClass);
+          fromEl.style.visibility = from === page ? 'visible' : '';
+        }, 520);
+      }
+
+      function goBack() {
+        if (state.modalOpen) {
+          closeModal();
+          return;
+        }
+        if (state.history.length <= 1) return;
+        history.back();
+      }
+
+      function wireCurrentPage(page) {
+        const scroller = pageScrolls[page];
+        scroller.addEventListener('scroll', () => handleScroll(page), { passive: true });
+      }
+
+      function setupTimeline() {
+        let isDown = false;
+        let startX = 0;
+        let startLeft = 0;
+        let pointerId = null;
+
+        const onDown = e => {
+          isDown = true;
+          pointerId = e.pointerId;
+          timeline.classList.add('dragging');
+          startX = e.clientX;
+          startLeft = timeline.scrollLeft;
+          timeline.setPointerCapture?.(pointerId);
+        };
+        const onMove = e => {
+          if (!isDown) return;
+          e.preventDefault();
+          const dx = e.clientX - startX;
+          timeline.scrollLeft = startLeft - dx;
+        };
+        const onUp = () => {
+          isDown = false;
+          timeline.classList.remove('dragging');
+          try { pointerId !== null && timeline.releasePointerCapture(pointerId); } catch (_) {}
+        };
+
+        timeline.addEventListener('pointerdown', onDown);
+        timeline.addEventListener('pointermove', onMove);
+        timeline.addEventListener('pointerup', onUp);
+        timeline.addEventListener('pointercancel', onUp);
+        timeline.addEventListener('pointerleave', onUp);
+
+        timelinePrev.addEventListener('click', () => timeline.scrollBy({ left: -340, behavior: 'smooth' }));
+        timelineNext.addEventListener('click', () => timeline.scrollBy({ left: 340, behavior: 'smooth' }));
+      }
+
+      function bindClicks() {
+        document.querySelectorAll('[data-go-page]').forEach(btn => {
+          btn.addEventListener('click', () => switchPage(btn.dataset.goPage));
+        });
+
+        cardButtons.forEach(btn => {
+          btn.addEventListener('click', () => {
+            const item = itemData[btn.dataset.cardId];
+            if (item) openModal(item);
+          });
+          btn.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              btn.click();
+            }
+          });
+        });
+
+        tourButtons.forEach(btn => {
+          btn.addEventListener('click', () => {
+            const url = btn.dataset.tourUrl;
+            if (!url) {
+              showToast('功能接入中');
+              return;
+            }
+            window.open(url, '_blank', 'noopener,noreferrer');
+          });
+        });
+
+        playBtn.addEventListener('click', toggleVideo);
+        modalClose.addEventListener('click', closeModal);
+        modal.addEventListener('click', e => {
+          if (e.target === modal) closeModal();
+        });
+        backTop.addEventListener('click', () => {
+          currentScrollEl().scrollTo({ top: 0, behavior: 'smooth' });
+        });
+        backBtn.addEventListener('click', goBack);
+        logoBtn.addEventListener('click', () => switchPage('home'));
+
+        document.addEventListener('keydown', e => {
+          if (e.key === 'Escape') {
+            if (state.modalOpen) {
+              closeModal();
+            } else if (state.history.length > 1) {
+              goBack();
+            }
+            return;
+          }
+          if (state.modalOpen) return;
+          if (e.key === 'ArrowLeft') {
+            switchPage(nextPage(state.currentPage, -1));
+          } else if (e.key === 'ArrowRight') {
+            switchPage(nextPage(state.currentPage, 1));
+          }
+        });
+
+        window.addEventListener('popstate', event => {
+          const page = event.state?.page || location.hash.replace('#', '') || 'home';
+          const index = state.history.lastIndexOf(page);
+          if (index >= 0) state.history = state.history.slice(0, index + 1);
+          else state.history = [page];
+          switchPage(page, { fromHistory: true, force: true, replace: true });
+        });
+      }
+
+      function initFromLocation() {
+        const hashPage = location.hash.replace('#', '');
+        const page = pageOrder.includes(hashPage) ? hashPage : 'home';
+        state.currentPage = page;
+        state.history = [page];
+        setPageInstant(page, { replace: true });
+        history.replaceState({ page }, '', `#${page}`);
+      }
+
+      function initialReveal() {
+        revealTargets.forEach(el => el.classList.remove('visible'));
+      }
+
+      function syncHeader() {
+        setActiveTab(state.currentPage);
+        renderAnchorNav(state.currentPage);
+        if (!state.scrollWired) {
+          wireCurrentPage('home');
+          wireCurrentPage('main');
+          wireCurrentPage('ferrari');
+          state.scrollWired = true;
+        }
+      }
+
+      let wired = false;
+      function boot() {
+        if (wired) return;
+        wired = true;
+        initialReveal();
+        bindClicks();
+        setupTimeline();
+        initFromLocation();
+        syncHeader();
+        handleScroll(state.currentPage);
+        requestAnimationFrame(() => {
+          restoreScroll(state.currentPage);
+          if (state.currentPage === 'ferrari') animateCounters('ferrari');
+        });
+      }
+
+      boot();
+      window.addEventListener('load', () => {
+        handleScroll(state.currentPage);
+        animateCounters(state.currentPage);
+      });
+    })();
+  </script>
+</body>
+</html>
